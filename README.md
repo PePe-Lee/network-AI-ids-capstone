@@ -7,8 +7,8 @@ This project implements a machine learning-based IDS using CICIDS2017 dataset.
 
 ## Features
 - Flow-based traffic analysis
-- Multi-class attack classification (DoS/DDoS, PortScan, Web Attack, Bot)
-- Real-time detection pipeline (tcpdump + CICFlowMeter)
+- Multi-class attack classification (DoS/DDoS, PortScan,Brute Force, Web Attack, Bot)
+- semi-real-time detection pipeline (tcpdump + CICFlowMeter)
 
 ## Model
 - Multi-class classification model
