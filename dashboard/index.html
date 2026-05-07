@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>NIDS Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        header {
+            padding: 0.8em 2em;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+        }
+        header h1 { margin: 0 0 0.4em 0; font-size: 1.4em; }
+        .toolbar { display: flex; gap: 0.5em; align-items: center; flex-wrap: wrap; }
+        button, input {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            padding: 4px 10px;
+        }
+        .badge {
+            background: #1e3a8a;
+            color: #bfdbfe;
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-size: 0.8em;
+        }
+        /* ── stat cards ─────────────────────────────── */
+        .cards-4,
+        .cards-3 {
+            display: grid;
+            gap: 1em;
+            padding: 1.2em 2em 0;
+        }
+        .cards-4 { grid-template-columns: repeat(4, 1fr); }
+        .cards-3 { grid-template-columns: repeat(3, 1fr); }
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1em 1.4em;
+        }
+        .card .c-label {
+            font-size: 0.75em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 0.3em;
+        }
+        .card .c-value {
+            font-size: 2em;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .card .c-sub {
+            font-size: 0.75em;
+            color: #64748b;
+            margin-top: 0.2em;
+        }
+        .c-blue   { color: #60a5fa; }
+        .c-red    { color: #f87171; }
+        .c-green  { color: #34d399; }
+        .c-yellow { color: #fbbf24; }
+        .c-orange { color: #fb923c; }
+        .c-purple { color: #a78bfa; }
+        /* ── main grid ───────────────────────────────── */
+        main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2em;
+            padding: 1.2em 2em;
+        }
+        section {
+            background: #1e293b;
+            padding: 1em 1.5em;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        section h2 {
+            margin: 0 0 0.8em 0;
+            font-size: 1em;
+            color: #93c5fd;
+        }
+        .full { grid-column: 1 / -1; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+        th, td { padding: 5px 8px; text-align: left; border-bottom: 1px solid #1e3a5f; }
+        th { color: #93c5fd; font-weight: 500; }
+        .attack { color: #f87171; font-weight: 600; }
+        .benign { color: #34d399; }
+        .both-badge {
+            font-size: .7em;
+            background: #7f1d1d;
+            color: #fca5a5;
+            border-radius: 3px;
+            padding: 1px 4px;
+            margin-left: 4px;
+        }
+        @media (max-width: 900px) {
+            .cards-4 { grid-template-columns: repeat(2, 1fr); }
+            .cards-3 { grid-template-columns: repeat(2, 1fr); }
+            main     { grid-template-columns: 1fr; }
+        }
+        /* ── risk level ──────────────────────────────── */
+        .cards-risk {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1em;
+            padding: 1em 2em 0;
+        }
+        .c-rl-green  { color: #27ae60; }
+        .c-rl-yellow { color: #f39c12; }
+        .c-rl-orange { color: #e67e22; }
+        .c-rl-red    { color: #e74c3c; }
+        .rl-badge {
+            display: inline-block;
+            font-size: .75em;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 2px 7px;
+            white-space: nowrap;
+        }
+        .rl-benign { background: rgba(39,174,96,.15);  color: #27ae60; border: 1px solid rgba(39,174,96,.5); }
+        .rl-border { background: rgba(243,156,18,.15); color: #f39c12; border: 1px solid rgba(243,156,18,.5); }
+        .rl-suspic { background: #e67e22; color: #fff; border: 1px solid #e67e22; }
+        .rl-attack { background: #e74c3c; color: #fff; border: 1px solid #e74c3c; }
+        .rl-desc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65em;
+        }
+        .rl-desc-card {
+            border-radius: 6px;
+            padding: 0.75em 0.9em;
+            font-size: 0.81em;
+            line-height: 1.55;
+        }
+        .rl-desc-card .rl-title {
+            font-weight: 700;
+            font-size: 0.92em;
+            margin-bottom: 0.35em;
+        }
+        .rl-desc-benign { background: rgba(39,174,96,.08);  border: 1px solid rgba(39,174,96,.35); }
+        .rl-desc-border { background: rgba(243,156,18,.08); border: 1px solid rgba(243,156,18,.35); }
+        .rl-desc-suspic { background: rgba(230,126,34,.08); border: 1px solid rgba(230,126,34,.35); }
+        .rl-desc-attack { background: rgba(231,76,60,.08);  border: 1px solid rgba(231,76,60,.35); }
+        @media (max-width: 900px) {
+            .cards-risk   { grid-template-columns: repeat(2, 1fr); }
+            .rl-desc-grid { grid-template-columns: 1fr; }
+        }
+        /* ── scatter ─────────────────────────────────── */
+        .scatter-subtitle {
+            font-size: 0.85em;
+            color: #94a3b8;
+            margin-bottom: 0.7em;
+            padding-bottom: 0.4em;
+            border-bottom: 1px solid #1e3a5f;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>NIDS AE+LOF Dashboard</h1>
+    <div class="toolbar">
+        <label>API URL: <input id="apiBase" value="http://localhost:5000" size="26"></label>
+        <label>갱신(ms): <input id="refresh" value="5000" size="5"></label>
+        <button id="refreshBtn">새로고침</button>
+        <span id="health" class="badge">…</span>
+    </div>
+</header>
+
+<!-- ── 상단 통계 카드 4개 ── -->
+<div class="cards-4">
+    <div class="card">
+        <div class="c-label">총 검사 트래픽</div>
+        <div class="c-value c-blue" id="cTotal">0</div>
+        <div class="c-sub">누적 플로우</div>
+    </div>
+    <div class="card">
+        <div class="c-label">공격 탐지</div>
+        <div class="c-value c-red" id="cAttack">0</div>
+        <div class="c-sub">Snort + ML 합산</div>
+    </div>
+    <div class="card">
+        <div class="c-label">정상 트래픽</div>
+        <div class="c-value c-green" id="cBenign">0</div>
+        <div class="c-sub">탐지 없음</div>
+    </div>
+    <div class="card">
+        <div class="c-label">공격 비율</div>
+        <div class="c-value c-yellow" id="cRatio">0.0%</div>
+        <div class="c-sub">공격 / 전체</div>
+    </div>
+</div>
+
+<!-- ── 탐지 방법별 카드 3개 ── -->
+<div class="cards-3" style="padding-top:1em;">
+    <div class="card">
+        <div class="c-label">Snort만 탐지</div>
+        <div class="c-value c-orange" id="cSnortOnly">0</div>
+        <div class="c-sub">시그니처 매칭 (ML은 정상)</div>
+    </div>
+    <div class="card">
+        <div class="c-label">AE / LOF 탐지</div>
+        <div class="c-value c-purple" id="cMlOnly">0</div>
+        <div class="c-sub">이상탐지 (Snort 패턴 없음)</div>
+    </div>
+    <div class="card">
+        <div class="c-label">둘 다 탐지</div>
+        <div class="c-value c-red" id="cBoth">0</div>
+        <div class="c-sub">확실한 공격 (Snort + AE/LOF)</div>
+    </div>
+</div>
+
+<!-- ── Risk Level 카운트 카드 4개 ── -->
+<div class="cards-risk">
+    <div class="card">
+        <div class="c-label">🟢 BENIGN-like</div>
+        <div class="c-value c-rl-green" id="rlBenign">0</div>
+        <div class="c-sub">정상 분포 내</div>
+    </div>
+    <div class="card">
+        <div class="c-label">🟡 BORDERLINE</div>
+        <div class="c-value c-rl-yellow" id="rlBorder">0</div>
+        <div class="c-sub">정상 상위 구간</div>
+    </div>
+    <div class="card">
+        <div class="c-label">🟠 SUSPICIOUS</div>
+        <div class="c-value c-rl-orange" id="rlSuspic">0</div>
+        <div class="c-sub">부분적 이상탐지</div>
+    </div>
+    <div class="card">
+        <div class="c-label">🔴 ATTACK-like</div>
+        <div class="c-value c-rl-red" id="rlAttack">0</div>
+        <div class="c-sub">강한 이상 / 공격 가능</div>
+    </div>
+</div>
+
+<!-- ── 차트 & 테이블 ── -->
+<main>
+    <section>
+        <h2>공격 유형별 통계</h2>
+        <canvas id="typeChart" height="240"></canvas>
+    </section>
+
+    <section>
+        <h2>탐지된 공격 IP Top 10</h2>
+        <table>
+            <thead><tr><th>IP</th><th>횟수</th></tr></thead>
+            <tbody id="ipBody"><tr><td colspan="2">로딩 중…</td></tr></tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>시간대별 공격 추이 (최근 10분)</h2>
+        <canvas id="timelineChart" height="160"></canvas>
+    </section>
+
+    <section>
+        <h2>Snort vs ML 탐지 비교</h2>
+        <canvas id="detectionChart" height="160"></canvas>
+    </section>
+
+    <!-- ── Risk Level 도넛 차트 ── -->
+    <section>
+        <h2>Risk Level 분포</h2>
+        <canvas id="riskChart" height="240"></canvas>
+    </section>
+
+    <!-- ── Risk Level 설명 카드 ── -->
+    <section>
+        <h2>Risk Level 설명</h2>
+        <div class="rl-desc-grid">
+            <div class="rl-desc-card rl-desc-benign">
+                <div class="rl-title" style="color:#27ae60">🟢 BENIGN-like</div>
+                정상 baseline과 매우 유사한 flow.<br>
+                모델 score가 정상 분포 안에 있고<br>
+                anomaly detector가 반응하지 않은 상태.
+            </div>
+            <div class="rl-desc-card rl-desc-border">
+                <div class="rl-title" style="color:#f39c12">🟡 BORDERLINE</div>
+                정상으로 판단되지만 score가<br>
+                정상 분포의 상위 구간에 가까운 flow.<br>
+                정상일 가능성이 높지만 약간 특이한 flow.
+            </div>
+            <div class="rl-desc-card rl-desc-suspic">
+                <div class="rl-title" style="color:#e67e22">🟠 SUSPICIOUS</div>
+                AE, LOF, Fusion 중 하나 이상이<br>
+                threshold를 넘어 anomaly로 판단한 flow.<br>
+                공격일 수도 있고 정상 outlier일 수도 있음.
+            </div>
+            <div class="rl-desc-card rl-desc-attack">
+                <div class="rl-title" style="color:#e74c3c">🔴 ATTACK-like</div>
+                여러 모델이 동시에 anomaly로 판단했거나<br>
+                behavior rule이 탐지한 강한 이상 flow.<br>
+                공격 가능성이 높은 flow.
+            </div>
+        </div>
+    </section>
+
+    <!-- ── AE Error vs LOF Score 산점도 ── -->
+    <section class="full" id="scatterSection">
+        <h2>AE Error vs LOF Score 분포</h2>
+        <!-- 차트 1: TEST BENIGN vs BASELINE -->
+        <div id="scatterBenignWrap" style="display:none; margin-bottom:1.4em;">
+            <div class="scatter-subtitle">TEST BENIGN vs BASELINE Train Normal</div>
+            <div style="position:relative; height:400px;">
+                <canvas id="scatterBenignChart"></canvas>
+            </div>
+        </div>
+        <!-- 차트 2: TEST ATTACK vs BASELINE -->
+        <div id="scatterAttackWrap" style="display:none;">
+            <div class="scatter-subtitle">TEST ATTACK vs BASELINE Train Normal</div>
+            <div style="position:relative; height:400px;">
+                <canvas id="scatterAttackChart"></canvas>
+            </div>
+        </div>
+        <!-- 데이터 없음 안내 -->
+        <div id="scatterNoData" style="color:#475569; text-align:center; padding:2em; font-size:0.9em;">
+            산점도 데이터 없음 — 탐지 결과가 누적되면 자동으로 표시됩니다.
+        </div>
+    </section>
+
+    <section class="full">
+        <h2>실시간 탐지 로그 (최근 100건)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>시간</th>
+                    <th>IP</th>
+                    <th>공격 유형</th>
+                    <th>신뢰도</th>
+                    <th>AE 오차</th>
+                    <th>LOF 점수</th>
+                    <th>탐지 단계</th>
+                    <th>Risk Level</th>
+                    <th>Snort 결과</th>
+                </tr>
+            </thead>
+            <tbody id="logBody"><tr><td colspan="9">로딩 중…</td></tr></tbody>
+        </table>
+    </section>
+    <section class="full">
+        <h2>AE / LOF / Fusion Score Distribution</h2>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1em;">
+            <div><canvas id="aeDistChart" height="180"></canvas></div>
+            <div><canvas id="lofDistChart" height="180"></canvas></div>
+            <div><canvas id="fusionDistChart" height="180"></canvas></div>
+        </div>
+    </section>
+
+    <section class="full">
+        <h2>Score Summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Score</th>
+                    <th>Baseline p50</th>
+                    <th>Baseline p90</th>
+                    <th>Baseline p95</th>
+                    <th>Threshold</th>
+                    <th>Test p50</th>
+                    <th>Test p90</th>
+                    <th>Test p95</th>
+                    <th>Test p99.5</th>
+                    <th>Above Threshold</th>
+                </tr>
+            </thead>
+            <tbody id="scoreSummaryBody"><tr><td colspan="10">Loading...</td></tr></tbody>
+        </table>
+    </section>
+
+    <section class="full">
+        <h2>Top Shifted Features</h2>
+        <canvas id="featureShiftChart" height="180"></canvas>
+    </section>
+</main>
+
+<script>
+let typeChart, timelineChart, detectionChart, riskChart;
+let scatterBenignChart = null, scatterAttackChart = null;
+let aeDistChart = null, lofDistChart = null, fusionDistChart = null, featureShiftChart = null;
+let _scatterThrs = { ae_mse: 0.5, lof: 0.0 };
+let timer;
+
+function api() { return document.getElementById('apiBase').value.replace(/\/$/, ''); }
+
+async function fetchJson(path) {
+    const res = await fetch(api() + path);
+    if (!res.ok) throw new Error(path + ' -> ' + res.status);
+    return res.json();
+}
+
+/* ── health ── */
+async function refreshHealth() {
+    const el = document.getElementById('health');
+    try {
+        const h = await fetchJson('/health');
+        const aeStatus  = h.ae_loaded  ? 'on' : 'off';
+        const lofStatus = h.lof_loaded ? 'on' : 'off';
+        const tfStatus  = h.tensorflow_available ? '' : ' ⚠TF없음';
+        el.textContent = `OK · AE:${aeStatus} · LOF:${lofStatus}${tfStatus} · rules:${h.signature_rules}`;
+        el.style.background = '#14532d';
+        el.style.color = '#bbf7d0';
+    } catch {
+        el.textContent = 'API 연결 실패';
+        el.style.background = '#7f1d1d';
+        el.style.color = '#fecaca';
+    }
+}
+
+/* ── stats ── */
+async function refreshStats() {
+    try {
+        const s = await fetchJson('/stats');
+
+        // 통계 카드 4개
+        document.getElementById('cTotal').textContent  = (s.total_inspected || 0).toLocaleString();
+        document.getElementById('cAttack').textContent = (s.total_attack    || 0).toLocaleString();
+        document.getElementById('cBenign').textContent = (s.total_benign    || 0).toLocaleString();
+        document.getElementById('cRatio').textContent  =
+            (((s.attack_ratio || 0) * 100).toFixed(1)) + '%';
+
+        // 탐지 방법 카드 3개
+        document.getElementById('cSnortOnly').textContent = (s.snort_only     || 0).toLocaleString();
+        document.getElementById('cMlOnly').textContent    = (s.ml_only        || 0).toLocaleString();
+        document.getElementById('cBoth').textContent      = (s.both_detected  || 0).toLocaleString();
+
+        // 파이 차트 — 공격 유형
+        const pLabels = Object.keys(s.top_attack_types || s.by_type || {});
+        const pData   = pLabels.map(k => (s.top_attack_types || s.by_type)[k]);
+        const PIE_COLORS = ['#f87171','#fbbf24','#60a5fa','#a78bfa','#34d399','#fb7185','#38bdf8','#4ade80'];
+        if (!typeChart) {
+            typeChart = new Chart(
+                document.getElementById('typeChart').getContext('2d'),
+                {
+                    type: 'pie',
+                    data: { labels: pLabels, datasets: [{ data: pData, backgroundColor: PIE_COLORS }] },
+                    options: {
+                        plugins: { legend: { labels: { color: '#e2e8f0', boxWidth: 12 } } }
+                    }
+                }
+            );
+        } else {
+            typeChart.data.labels = pLabels;
+            typeChart.data.datasets[0].data = pData;
+            typeChart.update('none');
+        }
+
+        // IP 테이블
+        const ipBody = document.getElementById('ipBody');
+        const ips = s.top_attacker_ips || (s.top_ips || []).map(([ip, count]) => ({ip, count}));
+        ipBody.innerHTML = ips.length
+            ? ips.map(({ip, count}) => `<tr><td>${ip}</td><td>${count}</td></tr>`).join('')
+            : '<tr><td colspan="2">아직 탐지 없음</td></tr>';
+
+        // 라인 차트 — 시간대별 추이
+        const tl      = s.timeline || [];
+        const tlLabels = tl.map(t => t.time);
+        const tlAtk    = tl.map(t => t.attack);
+        const tlBen    = tl.map(t => t.benign);
+        const CHART_GRID = '#1e3a5f';
+        const CHART_TICK = '#94a3b8';
+        const scaleOpts  = {
+            ticks: { color: CHART_TICK },
+            grid:  { color: CHART_GRID },
+        };
+        if (!timelineChart) {
+            timelineChart = new Chart(
+                document.getElementById('timelineChart').getContext('2d'),
+                {
+                    type: 'line',
+                    data: {
+                        labels: tlLabels,
+                        datasets: [
+                            {
+                                label: '공격',
+                                data: tlAtk,
+                                borderColor: '#f87171',
+                                backgroundColor: 'rgba(248,113,113,0.12)',
+                                tension: 0.35,
+                                fill: true,
+                                pointRadius: 3,
+                            },
+                            {
+                                label: '정상',
+                                data: tlBen,
+                                borderColor: '#34d399',
+                                backgroundColor: 'rgba(52,211,153,0.08)',
+                                tension: 0.35,
+                                fill: true,
+                                pointRadius: 3,
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { ...scaleOpts },
+                            y: { ...scaleOpts, beginAtZero: true },
+                        },
+                        plugins: { legend: { labels: { color: '#e2e8f0', boxWidth: 12 } } }
+                    }
+                }
+            );
+        } else {
+            timelineChart.data.labels = tlLabels;
+            timelineChart.data.datasets[0].data = tlAtk;
+            timelineChart.data.datasets[1].data = tlBen;
+            timelineChart.update('none');
+        }
+
+        // 막대 차트 — Snort vs ML 비교
+        const detData = [
+            s.snort_only    || 0,
+            s.ml_only       || 0,
+            s.both_detected || 0,
+        ];
+        if (!detectionChart) {
+            detectionChart = new Chart(
+                document.getElementById('detectionChart').getContext('2d'),
+                {
+                    type: 'bar',
+                    data: {
+                        labels: ['Snort만 탐지', 'ML만 탐지', '둘 다 탐지'],
+                        datasets: [{
+                            label: '탐지 건수',
+                            data: detData,
+                            backgroundColor: ['#fb923c', '#a78bfa', '#f87171'],
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { ...scaleOpts },
+                            y: { ...scaleOpts, beginAtZero: true },
+                        },
+                        plugins: { legend: { labels: { color: '#e2e8f0', boxWidth: 12 } } }
+                    }
+                }
+            );
+        } else {
+            detectionChart.data.datasets[0].data = detData;
+            detectionChart.update('none');
+        }
+
+        // ── Risk Level 카운트 카드 ───────────────────────────
+        const rlCounts = s.risk_level_counts || {};
+        document.getElementById('rlBenign').textContent = (rlCounts['BENIGN-like'] || 0).toLocaleString();
+        document.getElementById('rlBorder').textContent = (rlCounts['BORDERLINE']  || 0).toLocaleString();
+        document.getElementById('rlSuspic').textContent = (rlCounts['SUSPICIOUS']  || 0).toLocaleString();
+        document.getElementById('rlAttack').textContent = (rlCounts['ATTACK-like'] || 0).toLocaleString();
+
+        // ── Risk Level 도넛 차트 ─────────────────────────────
+        const rlLabels = ['BENIGN-like', 'BORDERLINE', 'SUSPICIOUS', 'ATTACK-like'];
+        const rlData   = rlLabels.map(l => rlCounts[l] || 0);
+        const rlColors = ['#27ae60', '#f39c12', '#e67e22', '#e74c3c'];
+        if (!riskChart) {
+            riskChart = new Chart(
+                document.getElementById('riskChart').getContext('2d'),
+                {
+                    type: 'doughnut',
+                    data: {
+                        labels: rlLabels,
+                        datasets: [{
+                            data: rlData,
+                            backgroundColor: rlColors,
+                            borderWidth: 2,
+                            borderColor: '#1e293b',
+                        }]
+                    },
+                    options: {
+                        cutout: '60%',
+                        plugins: {
+                            legend: { labels: { color: '#e2e8f0', boxWidth: 12 } }
+                        }
+                    }
+                }
+            );
+        } else {
+            riskChart.data.datasets[0].data = rlData;
+            riskChart.update('none');
+        }
+
+    } catch (e) { console.error('[stats]', e); }
+}
+
+/* ── logs ── */
+async function refreshLogs() {
+    try {
+        const l = await fetchJson('/logs');
+        const body = document.getElementById('logBody');
+        if (!l.logs || l.logs.length === 0) {
+            body.innerHTML = '<tr><td colspan="9">아직 탐지 로그 없음</td></tr>';
+            return;
+        }
+        const RL_CLASS = {
+            'BENIGN-like': 'rl-benign',
+            'BORDERLINE':  'rl-border',
+            'SUSPICIOUS':  'rl-suspic',
+            'ATTACK-like': 'rl-attack',
+        };
+        body.innerHTML = l.logs.map(row => {
+            const cls   = row.is_attack ? 'attack' : 'benign';
+            const both  = row.both_detected
+                ? '<span class="both-badge">둘 다</span>' : '';
+            const snort = row.snort_result || row.signature || {};
+            const ml    = row.ml_result    || row.ml        || {};
+            const snortStr = snort.label
+                ? `${snort.label} (${(snort.confidence||0).toFixed(2)})` : '-';
+            const aeMse  = row.ae_score  != null ? row.ae_score.toFixed(5)  :
+                           (ml.ae_mse   != null ? ml.ae_mse.toFixed(5)   : '-');
+            const lofRaw = row.lof_score != null ? row.lof_score.toFixed(4) :
+                           (ml.lof_score != null ? ml.lof_score.toFixed(4) : '-');
+            const stageStr = row.detected_by || row.stage || '-';
+            const rl       = row.risk_level || '';
+            const rlBadge  = rl
+                ? `<span class="rl-badge ${RL_CLASS[rl] || ''}">${rl}</span>`
+                : '-';
+
+            return `<tr>
+                <td>${row.ts || ''}</td>
+                <td>${row.src_ip || ''}</td>
+                <td class="${cls}">${row.attack_type || ''}${both}</td>
+                <td>${(row.confidence || 0).toFixed(3)}</td>
+                <td>${aeMse}</td>
+                <td>${lofRaw}</td>
+                <td>${stageStr}</td>
+                <td>${rlBadge}</td>
+                <td>${snortStr}</td>
+            </tr>`;
+        }).join('');
+    } catch (e) { console.error('[logs]', e); }
+}
+
+/* ── scatter helpers ── */
+function sampleArr(arr, n) {
+    if (arr.length <= n) return arr;
+    const pool = [...arr];
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, n);
+}
+
+function makeScatterChart(canvasId, testPts, basePts, thrs, testLabel) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+
+    // 축 범위 계산
+    const allX = [...testPts, ...basePts].map(p => p.x);
+    const allY = [...testPts, ...basePts].map(p => p.y);
+    const xMin = allX.length ? Math.min(...allX) : -5;
+    const xMax = allX.length ? Math.max(...allX) : 5;
+    const yMax = allY.length ? Math.max(...allY) : 1;
+    const xPad = Math.max((xMax - xMin) * 0.08, 0.5);
+    const yPad = Math.max(yMax * 0.08, 0.01);
+
+    // 점 수에 따른 투명도
+    const total      = testPts.length + basePts.length;
+    const testAlpha  = total > 500 ? 0.3 : total > 200 ? 0.45 : 0.6;
+    const baseAlpha  = basePts.length > 500 ? 0.25 : 0.4;
+
+    const datasets = [];
+
+    // Baseline (주황 X) — 데이터 없으면 생략
+    if (basePts.length > 0) {
+        datasets.push({
+            type: 'scatter',
+            label: 'Baseline Train Normal',
+            data: basePts,
+            backgroundColor: `rgba(255,127,14,${baseAlpha})`,
+            borderColor:     `rgba(255,127,14,${baseAlpha})`,
+            pointStyle: 'crossRot',
+            pointRadius: 5,
+            borderWidth: 1.5,
+        });
+    }
+
+    // TEST 데이터 (파란 점)
+    datasets.push({
+        type: 'scatter',
+        label: testLabel,
+        data: testPts,
+        backgroundColor: `rgba(31,119,180,${testAlpha})`,
+        borderColor:     `rgba(31,119,180,${testAlpha})`,
+        pointStyle: 'circle',
+        pointRadius: 4,
+        borderWidth: 1,
+    });
+
+    // LOF threshold — 수직 점선
+    datasets.push({
+        type: 'line',
+        label: 'LOF threshold',
+        data: [
+            { x: thrs.lof, y: -yPad },
+            { x: thrs.lof, y: yMax + yPad },
+        ],
+        borderColor: 'rgba(31,119,180,0.8)',
+        borderDash: [5, 5],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+    });
+
+    // AE threshold — 수평 점선
+    datasets.push({
+        type: 'line',
+        label: 'AE threshold',
+        data: [
+            { x: xMin - xPad, y: thrs.ae_mse },
+            { x: xMax + xPad, y: thrs.ae_mse },
+        ],
+        borderColor: 'rgba(31,119,180,0.8)',
+        borderDash: [5, 5],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+    });
+
+    return new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+            animation: { duration: 0 },
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'LOF anomaly score',
+                        color: '#94a3b8',
+                        font: { size: 11 },
+                    },
+                    ticks: { color: '#94a3b8' },
+                    grid:  { color: '#1e3a5f' },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'AE reconstruction error',
+                        color: '#94a3b8',
+                        font: { size: 11 },
+                    },
+                    ticks: { color: '#94a3b8' },
+                    grid:  { color: '#1e3a5f' },
+                    beginAtZero: true,
+                },
+            },
+            plugins: {
+                legend: { labels: { color: '#e2e8f0', boxWidth: 12 } },
+            },
+        },
+    });
+}
+
+/* ── scatter 갱신 ── */
+async function refreshScatter() {
+    try {
+        // 1) /health 에서 threshold 읽기
+        try {
+            const h = await fetchJson('/health');
+            if (h.thresholds) {
+                _scatterThrs = {
+                    ae_mse: h.thresholds.ae_mse ?? h.thresholds.ae ?? 0.5,
+                    lof:    h.thresholds.lof    ?? 0.0,
+                };
+            }
+        } catch { /* 기존 캐시 사용 */ }
+        const thrs = _scatterThrs;
+
+        // 2) /scatter 에서 baseline 데이터 (선택적 엔드포인트)
+        let baseRaw = [];
+        try {
+            const sc = await fetchJson('/scatter');
+            if (Array.isArray(sc.baseline_normal)) baseRaw = sc.baseline_normal;
+        } catch { /* baseline 없으면 생략 */ }
+        if (baseRaw.length > 1000) baseRaw = sampleArr(baseRaw, 500);
+        const basePts = baseRaw
+            .filter(p => p.lof_score != null && p.ae_score != null
+                      && isFinite(p.lof_score) && isFinite(p.ae_score))
+            .map(p => ({ x: +p.lof_score, y: +p.ae_score }));
+
+        // 3) /logs 에서 flow 데이터
+        const l    = await fetchJson('/logs');
+        const logs = l.logs || [];
+
+        // signature-only 탐지(ae=0, lof=0)는 ML 단계 미도달이므로 제외
+        const hasScores = r =>
+            r.ae_score != null && r.lof_score != null
+            && isFinite(r.ae_score) && isFinite(r.lof_score)
+            && !(r.ae_score === 0 && r.lof_score === 0);
+
+        const benignPts = logs.filter(r => !r.is_attack && hasScores(r))
+                              .map(r => ({ x: +r.lof_score, y: +r.ae_score }));
+        const attackPts = logs.filter(r =>  r.is_attack && hasScores(r))
+                              .map(r => ({ x: +r.lof_score, y: +r.ae_score }));
+
+        const hasBenign = benignPts.length > 0;
+        const hasAttack = attackPts.length > 0;
+        document.getElementById('scatterNoData').style.display =
+            (hasBenign || hasAttack) ? 'none' : '';
+
+        // 차트 1 — BENIGN
+        const bWrap = document.getElementById('scatterBenignWrap');
+        bWrap.style.display = hasBenign ? '' : 'none';
+        if (hasBenign) {
+            if (scatterBenignChart) { scatterBenignChart.destroy(); scatterBenignChart = null; }
+            scatterBenignChart = makeScatterChart(
+                'scatterBenignChart', benignPts, basePts, thrs, 'TEST Benign'
+            );
+        }
+
+        // 차트 2 — ATTACK
+        const aWrap = document.getElementById('scatterAttackWrap');
+        aWrap.style.display = hasAttack ? '' : 'none';
+        if (hasAttack) {
+            if (scatterAttackChart) { scatterAttackChart.destroy(); scatterAttackChart = null; }
+            scatterAttackChart = makeScatterChart(
+                'scatterAttackChart', attackPts, basePts, thrs, 'TEST Attack'
+            );
+        }
+
+    } catch (e) { console.error('[scatter]', e); }
+}
+
+/* ── 통합 갱신 ── */
+function fmtNum(v) {
+    return v == null || !isFinite(v) ? '-' : (+v).toPrecision(4);
+}
+
+function renderDistributionChart(chartRef, canvasId, title, block) {
+    if (!block || !block.bins || block.bins.length < 2) return chartRef;
+    const labels = block.bins.slice(0, -1).map((b, i) => `${fmtNum(b)}-${fmtNum(block.bins[i + 1])}`);
+    const data = {
+        labels,
+        datasets: [
+            { label: 'Baseline', data: block.baseline_counts || [], backgroundColor: 'rgba(96,165,250,0.45)' },
+            { label: 'Latest PCAP', data: block.latest_counts || [], backgroundColor: 'rgba(248,113,113,0.45)' },
+        ],
+    };
+    const options = {
+        responsive: true,
+        plugins: {
+            title: { display: true, text: `${title} | threshold ${fmtNum(block.threshold)}`, color: '#e2e8f0' },
+            legend: { labels: { color: '#e2e8f0', boxWidth: 12 } },
+        },
+        scales: {
+            x: { ticks: { color: '#94a3b8', maxRotation: 0, autoSkip: true }, grid: { color: '#1e3a5f' } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e3a5f' }, beginAtZero: true },
+        },
+    };
+    if (!chartRef) {
+        return new Chart(document.getElementById(canvasId).getContext('2d'), { type: 'bar', data, options });
+    }
+    chartRef.data = data;
+    chartRef.options = options;
+    chartRef.update('none');
+    return chartRef;
+}
+
+async function refreshScoreDistribution() {
+    try {
+        const d = await fetchJson('/score-distribution');
+        const h = d.histograms || {};
+        aeDistChart = renderDistributionChart(aeDistChart, 'aeDistChart', 'AE Error', h.ae_error);
+        lofDistChart = renderDistributionChart(lofDistChart, 'lofDistChart', 'LOF Score', h.lof_score);
+        fusionDistChart = renderDistributionChart(fusionDistChart, 'fusionDistChart', 'Fusion Distance', h.fusion_distance);
+
+        const body = document.getElementById('scoreSummaryBody');
+        const rows = d.score_summary || [];
+        body.innerHTML = rows.length ? rows.map(r => `<tr>
+            <td>${r.score}</td><td>${fmtNum(r.baseline_p50)}</td><td>${fmtNum(r.baseline_p90)}</td>
+            <td>${fmtNum(r.baseline_p95)}</td><td>${fmtNum(r.baseline_threshold)}</td>
+            <td>${fmtNum(r.test_p50)}</td><td>${fmtNum(r.test_p90)}</td><td>${fmtNum(r.test_p95)}</td>
+            <td>${fmtNum(r.test_p995)}</td>
+            <td>${r.test_above_threshold_rate == null ? '-' : (r.test_above_threshold_rate * 100).toFixed(1) + '%'}</td>
+        </tr>`).join('') : '<tr><td colspan="10">No latest PCAP yet</td></tr>';
+
+        const shifts = d.top_shifted_features || [];
+        const chartData = {
+            labels: shifts.map(r => r.feature),
+            datasets: [{ label: 'Abs median shift', data: shifts.map(r => r.median_shift_abs || 0), backgroundColor: '#60a5fa', borderRadius: 4 }],
+        };
+        const chartOptions = {
+            indexAxis: 'y',
+            responsive: true,
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e3a5f' }, beginAtZero: true },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e3a5f' } },
+            },
+            plugins: { legend: { labels: { color: '#e2e8f0', boxWidth: 12 } } },
+        };
+        if (!featureShiftChart) {
+            featureShiftChart = new Chart(document.getElementById('featureShiftChart').getContext('2d'), {
+                type: 'bar', data: chartData, options: chartOptions,
+            });
+        } else {
+            featureShiftChart.data = chartData;
+            featureShiftChart.update('none');
+        }
+    } catch (e) { console.error('[score-distribution]', e); }
+}
+
+function refreshAll() {
+    refreshHealth();
+    refreshStats();
+    refreshLogs();
+    refreshScatter();
+    refreshScoreDistribution();
+}
+
+function scheduleAuto() {
+    if (timer) clearInterval(timer);
+    const ms = parseInt(document.getElementById('refresh').value, 10) || 5000;
+    timer = setInterval(refreshAll, ms);
+}
+
+document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+document.getElementById('refresh').addEventListener('change', scheduleAuto);
+
+refreshAll();
+scheduleAuto();
+</script>
+</body>
+</html>
