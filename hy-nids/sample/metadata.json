@@ -1,0 +1,14 @@
+{
+  "roles": {
+    "127.0.0.2": "normal_client",
+    "127.0.0.1": "server"
+  },
+  "fixed_interval": [
+    1795000020,
+    1795003620
+  ],
+  "pcap_sha256": "e2c87bce93ad83e96de441b71fd59a71c950f6b975d734b854a160af94735e7c",
+  "packets": 1320,
+  "flows": 120,
+  "normal_client_minutes": 60
+}

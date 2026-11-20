@@ -1,0 +1,19 @@
+﻿범주,시나리오 ID,실험 의도,방어 관측 항목,공격 라벨 구간,IDS 탐지,IDS+kNN 탐지 평균,추가 탐지 평균
+SQLi,sqli_login_tautology,로그인 입력에서 SQL 조건 변경 의도,인증 입력의 SQL 구문 징후,300,0,0,0
+SQLi,sqli_login_comment,로그인 입력에서 SQL 주석 징후,SQL 주석과 인증 입력 징후,300,300,300,0
+SQLi,sqli_search_tautology,검색 입력에서 SQL 조건 변경 의도,검색 요청의 SQL 비교식 징후,300,300,300,0
+SQLi,sqli_search_union_constant,검색 입력에서 쿼리 결합 의도,검색 요청의 UNION 계열 징후,300,300,300,0
+XSS,xss_query_script,URL 질의에서 스크립트 삽입 의도,질의 문자열의 스크립트 태그 징후,300,300,300,0
+XSS,xss_query_event,URL 질의에서 이벤트 속성 삽입 의도,질의 문자열의 이벤트 속성 징후,300,300,300,0
+XSS,stored_xss_post,POST 입력에서 저장형 스크립트 삽입 의도,HTTP 본문의 XSS 구문 징후,300,300,300,0
+XSS,stored_xss_comment,댓글 입력에서 저장형 스크립트 삽입 의도,HTTP 본문의 XSS 구문 징후,300,300,300,0
+인증 시도,password_guessing,로그인 실패 반복 유형,인증 관련 경보와 1분 행동 통계 비교,300,0,300,300
+인증 시도,password_spray,여러 시험 계정에서 반복 인증 유형,인증 관련 경보와 1분 행동 통계 비교,300,0,0,0
+인증 시도,credential_pair_replay,시험 자격 정보 쌍의 재사용 유형,인증 관련 경보와 1분 행동 통계 비교,300,0,0,0
+느린 요청,slow_header_complete,헤더 지연이 있는 완결 HTTP 요청,요청 지속시간 및 흐름 특성 비교,300,0,300,300
+느린 요청,slow_body_complete,본문 지연이 있는 완결 HTTP 요청,요청 지속시간 및 흐름 특성 비교,300,0,300,300
+HTTP 행동,cache_bypass_get,캐시 동작이 다른 반복 GET 유형,일반 탐색과 요청 특성 비교,300,0,0,0
+HTTP 행동,mixed_method_reuse,GET·HEAD 혼합과 연결 재사용 유형,메서드 구성과 연결 특성 비교,300,0,150,150
+HTTP 행동,board_crawl,게시판 자동 탐색 유형,정상 연속 탐색과 요청 통계 비교,300,0,150,150
+요청 버스트,single_source_burst,짧은 구간에 요청이 집중된 유형 ①,요청량·지속시간 등 행동 통계 비교,300,0,0,0
+요청 버스트,multi_source_burst,요청 집중 형태를 달리한 유형 ②,요청량·지속시간 등 행동 통계 비교,300,0,0,0
