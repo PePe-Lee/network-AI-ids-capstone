@@ -1,0 +1,7 @@
+﻿run,rate,repeat,positive_IP_minutes,normal_IP_minutes,snort_packet_drops,snort_packet_drop_percent,live_IDS_TP,live_IDS_FN,live_IDS_FP,live_Snort_component_TP,offline_Snort_component_TP,offline_positive_live_negative_IP_minutes,offline_Snort_processed_packets
+cic2017_ddos_x1_r1,1,1,4,115,1826,1.6416139240506329,4,0,0,1,1,0,111232
+cic2017_ddos_x1_r2,1,2,4,115,1582,1.422252589182969,4,0,0,1,1,0,111232
+cic2017_ddos_x1_r3,1,3,4,115,1447,1.3008846375143843,4,0,0,1,1,0,111232
+cic2017_ddos_x2_r1,2,1,4,115,3399,3.055775316455696,2,2,0,1,3,2,111232
+cic2017_ddos_x2_r2,2,2,4,115,3514,3.1591628308400463,2,2,0,1,3,2,111232
+cic2017_ddos_x2_r3,2,3,4,115,2986,2.6844792865362486,2,2,0,1,1,0,111232

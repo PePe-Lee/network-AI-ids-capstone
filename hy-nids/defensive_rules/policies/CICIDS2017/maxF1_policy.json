@@ -1,0 +1,289 @@
+{
+  "id": "all_normal_breakpoints_maxF1",
+  "scope": "ALL-LABEL TRAIN/RESUBSTITUTION ONLY",
+  "objective": "Maximize F1 over fixed P0 semantic threshold OR family, no FP cap; Dinkelbach exact rational stopping condition",
+  "components": [
+    {
+      "signal_index": 54,
+      "threshold": 1,
+      "engine": "snort",
+      "signal": "122:3:1",
+      "family": "native_scan"
+    },
+    {
+      "signal_index": 120,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "1:491:15",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 49,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "122:1:1",
+      "family": "native_scan"
+    },
+    {
+      "signal_index": 77,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "1:1100001:1",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 221,
+      "threshold": 0,
+      "engine": "suricata",
+      "signal": "2100538",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 112,
+      "threshold": 15,
+      "engine": "snort",
+      "signal": "1:40063:5",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 114,
+      "threshold": 2,
+      "engine": "snort",
+      "signal": "1:402:16",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 55,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "122:5:1",
+      "family": "native_scan"
+    },
+    {
+      "signal_index": 335,
+      "threshold": 0,
+      "engine": "zeek",
+      "signal": "B/SLOW_HEADERS",
+      "family": "custom_behavior"
+    },
+    {
+      "signal_index": 78,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "1:1100003:1",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 157,
+      "threshold": 0,
+      "engine": "suricata",
+      "signal": "2014103",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 111,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "1:399:9",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 169,
+      "threshold": 0,
+      "engine": "suricata",
+      "signal": "2018377",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 102,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "1:30788:5",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 358,
+      "threshold": 0,
+      "engine": "zeek",
+      "signal": "S/LOGIN_POST_RATE",
+      "family": "custom_behavior"
+    },
+    {
+      "signal_index": 341,
+      "threshold": 0,
+      "engine": "zeek",
+      "signal": "Baseline::Suspicious_HTTP_URI",
+      "family": "custom_notice"
+    },
+    {
+      "signal_index": 355,
+      "threshold": 0,
+      "engine": "zeek",
+      "signal": "S/ARES",
+      "family": "custom_signature_indicator"
+    },
+    {
+      "signal_index": 119,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "1:46983:1",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 177,
+      "threshold": 0,
+      "engine": "suricata",
+      "signal": "2023207",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 213,
+      "threshold": 0,
+      "engine": "suricata",
+      "signal": "2067085",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 332,
+      "threshold": 0,
+      "engine": "zeek",
+      "signal": "B/CONNECTION_RATE",
+      "family": "custom_behavior"
+    },
+    {
+      "signal_index": 141,
+      "threshold": 0,
+      "engine": "suricata",
+      "signal": "2003068",
+      "family": "signature_or_rate"
+    },
+    {
+      "signal_index": 99,
+      "threshold": 0,
+      "engine": "snort",
+      "signal": "1:254:17",
+      "family": "signature_or_rate"
+    }
+  ],
+  "iterations": [
+    {
+      "iteration": 0,
+      "lambda_before": "0",
+      "lambda_after": "2242/3007",
+      "TP": 1121,
+      "FP": 422,
+      "integer_improvement_gap": 2242,
+      "status": 0,
+      "mip_gap": 0.0,
+      "mip_dual_bound": -402.0,
+      "objective": -402.0
+    },
+    {
+      "iteration": 1,
+      "lambda_before": "2242/3007",
+      "lambda_after": "1072/1291",
+      "TP": 1072,
+      "FP": 46,
+      "integer_improvement_gap": 658164,
+      "status": 0,
+      "mip_gap": 0.0,
+      "mip_dual_bound": -470212.0,
+      "objective": -470212.0
+    },
+    {
+      "iteration": 2,
+      "lambda_before": "1072/1291",
+      "lambda_after": "1072/1291",
+      "TP": 1072,
+      "FP": 46,
+      "integer_improvement_gap": 0,
+      "status": 0,
+      "mip_gap": 0.0,
+      "mip_dual_bound": -180208.0,
+      "objective": -180208.0
+    }
+  ],
+  "counts": {
+    "raw": 172,
+    "feasible_unique": 143,
+    "zero_FP_components": 75,
+    "residual_unique": 36,
+    "nondominated": 17
+  },
+  "training_metrics": {
+    "P": 1464,
+    "N": 95345,
+    "TP": 1072,
+    "FP": 46,
+    "FN_known": 392,
+    "TN_known": 95299,
+    "UNKNOWN_positive": 0,
+    "UNKNOWN_negative": 0,
+    "recall_lower": 0.73224043715847,
+    "recall_upper": 0.73224043715847,
+    "FPR_lower": 0.00048245844040065025,
+    "FPR_upper": 0.00048245844040065025,
+    "precision_known": 0.9588550983899821,
+    "F1_known": 0.8303640588690937,
+    "F1_lower": 0.8303640588690937,
+    "F1_upper": 0.8303640588690937
+  },
+  "families": {
+    "Bot": {
+      "P": 754,
+      "TP": 425
+    },
+    "DDoS": {
+      "P": 42,
+      "TP": 42
+    },
+    "DoS GoldenEye": {
+      "P": 16,
+      "TP": 16
+    },
+    "DoS Hulk": {
+      "P": 42,
+      "TP": 39
+    },
+    "DoS Slowhttptest": {
+      "P": 38,
+      "TP": 30
+    },
+    "DoS slowloris": {
+      "P": 54,
+      "TP": 48
+    },
+    "FTP-Patator": {
+      "P": 128,
+      "TP": 125
+    },
+    "Heartbleed": {
+      "P": 22,
+      "TP": 18
+    },
+    "Infiltration": {
+      "P": 56,
+      "TP": 37
+    },
+    "PortScan": {
+      "P": 50,
+      "TP": 41
+    },
+    "SSH-Patator": {
+      "P": 126,
+      "TP": 126
+    },
+    "Web Attack ï¿½ Brute Force": {
+      "P": 88,
+      "TP": 79
+    },
+    "Web Attack ï¿½ Sql Injection": {
+      "P": 6,
+      "TP": 6
+    },
+    "Web Attack ï¿½ XSS": {
+      "P": 42,
+      "TP": 40
+    }
+  }
+}

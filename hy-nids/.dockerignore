@@ -1,0 +1,8 @@
+**
+!Dockerfile
+!check_extract.py
+!extract_host_minutes.py
+!docker_demo.py
+!dashboard.html
+!sample
+!sample/**
